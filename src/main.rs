@@ -103,16 +103,28 @@ pub struct Province {
 }
 
 pub enum PopClass {
-    Worker,
+    Farmers,
+    Laborers,
+    Craftsmen,
+    Artisans,
     Aristocrat,
+    Capitalist,
 }
 
 #[derive(Component)]
-pub struct Population {
+pub struct PopGroup {
+    pub id: u32,
     pub size: u32,
-    pub class: PopClass,             // enum (Worker, Aristocrat)
+    pub class: PopClass,
     pub needs: Vec<(GoodType, f64)>, // goods needed
 }
+
+//#[derive(Component)]
+//pub struct Population {
+//pub size: u32,
+//pub class: PopClass,
+//pub needs: Vec<(GoodType, f64)>, // goods needed
+//}
 
 fn get_base_price(good: GoodType) -> f32 {
     match good {
@@ -234,11 +246,18 @@ fn update_prices_system(mut market: ResMut<Market>, mut new_day_ev: EventReader<
     }
 }
 
+fn population_consumption_system(
+    mut market: ResMut<Market>,
+    mut new_day_ev: EventReader<NewDayEvent>,
+) {
+}
+
 fn main() {
-    let mut goods: Vec<(GoodType, f32, f32)> = Vec::new(); // idk if is a good practice initialize this data here
-    goods.push((GoodType::Grain, 100.0, get_base_price(GoodType::Grain)));
-    goods.push((GoodType::Wine, 100.0, get_base_price(GoodType::Wine)));
-    goods.push((GoodType::Fruit, 100.0, get_base_price(GoodType::Fruit)));
+    let goods: Vec<(GoodType, f32, f32)> = vec![
+        (GoodType::Grain, 100.0, get_base_price(GoodType::Grain)),
+        (GoodType::Wine, 100.0, get_base_price(GoodType::Wine)),
+        (GoodType::Fruit, 100.0, get_base_price(GoodType::Fruit)),
+    ]; // idk if is a good practice initialize this data here
 
     App::new()
         .add_plugins(DefaultPlugins)
