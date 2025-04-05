@@ -154,6 +154,16 @@ fn get_base_price(good: GoodType) -> f32 {
     }
 }
 
+fn get_good_name(good: GoodType) -> String {
+    let good_name = match good {
+        GoodType::Wine => "Wine",
+        GoodType::Grain => "Grain",
+        GoodType::Fruit => "Fruit",
+    };
+
+    good_name.to_string()
+}
+
 fn add_goods(mut commands: Commands) {
     // make a vector to all goods and only iterate can be a good idea
     commands.spawn(Good {
@@ -218,11 +228,7 @@ fn setup(mut commands: Commands, mut market: ResMut<Market>) {
     let mut market_info = String::new();
     for (good_type, quantity, price) in &market.goods {
         // Converte o GoodType para string
-        let type_str = match good_type {
-            GoodType::Wine => "Wine",
-            GoodType::Grain => "Grain",
-            GoodType::Fruit => "Fruit",
-        };
+        let type_str = get_good_name(*good_type);
         // Monta a linha para o produto
         market_info.push_str(&format!(
             "{}: qty = {:.2}, price = {:.2}\n",
@@ -437,11 +443,7 @@ fn update_market_ui(
         //"good type {:?}, quantity {:?}, price {:?}",
         //good_type, quantity, price
         //);
-        let type_str = match good_type {
-            GoodType::Wine => "Wine",
-            GoodType::Grain => "Grain",
-            GoodType::Fruit => "Fruit",
-        };
+        let type_str = get_good_name(*good_type);
         market_info.push_str(&format!(
             "{}: {:.3} units @ ${:.4}\n",
             type_str, quantity, price
