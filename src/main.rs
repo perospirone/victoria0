@@ -5,7 +5,8 @@ struct TimeTracker {
     pub day: u32,
     pub month: u32,
     pub year: u32,
-    pub speed: u8,         // todo: implement speed (1-5) in advance time system
+    pub speed: u8, // todo: implement speed (1-5) in advance time system
+    pub pause: bool,
     pub elapsed_time: f32, // Accumulates delta time
 }
 
@@ -16,6 +17,7 @@ impl Default for TimeTracker {
             month: 1,
             year: 1830,
             speed: 1,
+            pause: false,
             elapsed_time: 0.0,
         }
     }
@@ -33,6 +35,10 @@ fn advance_time(
     time: Res<Time>,
     mut new_day_ev: EventWriter<NewDayEvent>,
 ) {
+    if time_tracker.pause {
+        return;
+    }
+
     time_tracker.elapsed_time += time.delta_secs(); // Accumulate real-time
 
     if time_tracker.elapsed_time >= 1.0 {
@@ -134,6 +140,12 @@ pub struct PopGroup {
     pub province_id: i32,
 }
 
+#[derive(Component)]
+pub struct MarketInfoText;
+
+#[derive(Component)]
+pub struct DateTimeText;
+
 fn get_base_price(good: GoodType) -> f32 {
     match good {
         GoodType::Wine => 9.7,
@@ -198,7 +210,53 @@ fn add_pops(mut commands: Commands) {
     });
 }
 
-fn setup(mut commands: Commands) {}
+fn setup(mut commands: Commands) {
+    // camera
+    commands.spawn(Camera2d);
+
+    // ui
+    commands.spawn((
+        MarketInfoText,
+        // Accepts a `String` or any type that converts into a `String`, such as `&str`
+        Text::new("market info"),
+        //TextFont {
+        // This font is loaded and will be used instead of the default font.
+        //font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+        //font_size: 67.0,
+        //..default()
+        //},
+        // Set the justification of the Text
+        TextLayout::new_with_justify(JustifyText::Center),
+        // Set the style of the Node itself.
+        Node {
+            position_type: PositionType::Absolute,
+            left: Val::Px(1.0),
+            top: Val::Px(1.0),
+            ..default()
+        },
+    ));
+
+    commands.spawn((
+        DateTimeText,
+        // Accepts a `String` or any type that converts into a `String`, such as `&str`
+        Text::new("Date: January 1836 Day 1 | Speed: 3 | Paused"),
+        //TextFont {
+        // This font is loaded and will be used instead of the default font.
+        //font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+        //font_size: 67.0,
+        //..default()
+        //},
+        // Set the justification of the Text
+        TextLayout::new_with_justify(JustifyText::Center),
+        // Set the style of the Node itself.
+        Node {
+            position_type: PositionType::Absolute,
+            left: Val::Px(1.0),
+            bottom: Val::Px(2.0),
+            ..default()
+        },
+    ));
+}
 
 fn production_system(
     mut market: ResMut<Market>,
@@ -280,7 +338,7 @@ fn population_consumption_system(
 
         for pop in query.iter() {
             for (good_type, quantity) in &pop.needs {
-                let demand = quantity * pop.size as f32 / 1000 as f32;
+                let demand = quantity * pop.size as f32 / 1000.0;
                 println!(
                     "good_type: {:?}, quantity: {:?}, demand: {:?}",
                     good_type, quantity, demand
@@ -291,13 +349,13 @@ fn population_consumption_system(
                 {
                     if *available_quantity >= demand {
                         *available_quantity -= demand;
-                        println!("Pop {} consumiu {:.4} de {:?}", pop.id, demand, good_type);
+                        println!("Pop {} consumed {:.4} of {:?}", pop.id, demand, good_type);
                     } else {
                         println!(
-                            "Pop {} queria {:.4} de {:?} mas só tinha {:.4}",
+                            "Pop {} wants {:.4} of {:?} but only had {:.4}",
                             pop.id, demand, good_type, available_quantity
                         );
-                        // talvez consumir só o que está disponível:
+                        // maybe only consume what was available:
                         *available_quantity = 0.0;
                     }
                 } else {
@@ -311,11 +369,55 @@ fn population_consumption_system(
     }
 }
 
+fn update_ui(
+    mut time_tracker: ResMut<TimeTracker>,
+    mut new_day_ev: EventReader<NewDayEvent>,
+    mut query: Query<&mut Text, With<DateTimeText>>,
+) {
+    if !new_day_ev.is_empty() {
+        new_day_ev.clear(); // clean processed events
+
+        let mut text = query.single_mut();
+
+        let month_name = match time_tracker.month {
+            1 => "January",
+            2 => "February",
+            3 => "March",
+            4 => "April",
+            5 => "May",
+            6 => "June",
+            7 => "July",
+            8 => "August",
+            9 => "September",
+            10 => "October",
+            11 => "November",
+            12 => "December",
+            _ => "Unknown",
+        };
+
+        let pause_status = if time_tracker.pause {
+            "Paused"
+        } else {
+            "Running"
+        };
+
+        text.0 = format!(
+            "Date: {} {} {} | Speed: {} | {}",
+            month_name, time_tracker.day, time_tracker.year, time_tracker.speed, pause_status
+        );
+
+        println!("month_name: {:?}", month_name);
+        println!("pause_status: {:?}", pause_status);
+        //println!("text query: {:?}", text_query);
+        println!("text: {:?}", text);
+    }
+}
+
 fn main() {
     let goods: Vec<(GoodType, f32, f32)> = vec![
-        (GoodType::Grain, 100.0, get_base_price(GoodType::Grain)),
-        (GoodType::Wine, 100.0, get_base_price(GoodType::Wine)),
-        (GoodType::Fruit, 100.0, get_base_price(GoodType::Fruit)),
+        (GoodType::Grain, 50.0, get_base_price(GoodType::Grain)),
+        (GoodType::Wine, 0.0, get_base_price(GoodType::Wine)),
+        (GoodType::Fruit, 50.0, get_base_price(GoodType::Fruit)),
     ]; // idk if is a good practice initialize this data here
 
     App::new()
@@ -334,6 +436,7 @@ fn main() {
                 population_consumption_system,
                 update_prices_system,
                 advance_time,
+                update_ui,
             )
                 .chain(),
         )
