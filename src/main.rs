@@ -210,11 +210,26 @@ fn add_pops(mut commands: Commands) {
     });
 }
 
-fn setup(mut commands: Commands) {
+fn setup(mut commands: Commands, mut market: ResMut<Market>) {
     // camera
     commands.spawn(Camera2d);
 
     // ui
+    let mut market_info = String::new();
+    for (good_type, quantity, price) in &market.goods {
+        // Converte o GoodType para string
+        let type_str = match good_type {
+            GoodType::Wine => "Wine",
+            GoodType::Grain => "Grain",
+            GoodType::Fruit => "Fruit",
+        };
+        // Monta a linha para o produto
+        market_info.push_str(&format!(
+            "{}: qty = {:.2}, price = {:.2}\n",
+            type_str, quantity, price
+        ));
+    }
+
     commands.spawn((
         MarketInfoText,
         // Accepts a `String` or any type that converts into a `String`, such as `&str`
@@ -373,6 +388,7 @@ fn update_ui(
     mut time_tracker: ResMut<TimeTracker>,
     mut new_day_ev: EventReader<NewDayEvent>,
     mut query: Query<&mut Text, With<DateTimeText>>,
+    mut market: ResMut<Market>,
 ) {
     if !new_day_ev.is_empty() {
         new_day_ev.clear(); // clean processed events
@@ -406,11 +422,53 @@ fn update_ui(
             month_name, time_tracker.day, time_tracker.year, time_tracker.speed, pause_status
         );
 
-        println!("month_name: {:?}", month_name);
-        println!("pause_status: {:?}", pause_status);
-        //println!("text query: {:?}", text_query);
-        println!("text: {:?}", text);
+        let mut market_info = String::new();
+        for (good_type, quantity, price) in &market.goods {
+            // Converte o GoodType para string
+            let type_str = match good_type {
+                GoodType::Wine => "Wine",
+                GoodType::Grain => "Grain",
+                GoodType::Fruit => "Fruit",
+            };
+            // Monta a linha para o produto
+            market_info.push_str(&format!(
+                "{}: qty = {:.4}, price = {:.4}\n",
+                type_str, quantity, price
+            ));
+        }
     }
+}
+
+// Add this new system
+fn update_market_ui(
+    mut market: ResMut<Market>,
+    mut query: Query<&mut Text, With<MarketInfoText>>,
+    mut new_day_ev: EventReader<NewDayEvent>,
+) {
+    let mut text = query.single_mut();
+    let mut market_info = String::new();
+
+    // Add header
+    market_info.push_str("Market Status:\n");
+
+    for (good_type, quantity, price) in &market.goods {
+        //println!(
+        //"good type {:?}, quantity {:?}, price {:?}",
+        //good_type, quantity, price
+        //);
+        let type_str = match good_type {
+            GoodType::Wine => "Wine",
+            GoodType::Grain => "Grain",
+            GoodType::Fruit => "Fruit",
+        };
+        market_info.push_str(&format!(
+            "{}: {:.3} units @ ${:.4}\n",
+            type_str, quantity, price
+        ));
+    }
+
+    // Update the text section
+    text.0 = market_info;
 }
 
 fn main() {
@@ -437,6 +495,7 @@ fn main() {
                 update_prices_system,
                 advance_time,
                 update_ui,
+                update_market_ui,
             )
                 .chain(),
         )
