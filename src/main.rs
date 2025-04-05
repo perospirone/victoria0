@@ -390,53 +390,34 @@ fn update_ui(
     mut query: Query<&mut Text, With<DateTimeText>>,
     mut market: ResMut<Market>,
 ) {
-    if !new_day_ev.is_empty() {
-        new_day_ev.clear(); // clean processed events
+    let mut text = query.single_mut();
 
-        let mut text = query.single_mut();
+    let month_name = match time_tracker.month {
+        1 => "January",
+        2 => "February",
+        3 => "March",
+        4 => "April",
+        5 => "May",
+        6 => "June",
+        7 => "July",
+        8 => "August",
+        9 => "September",
+        10 => "October",
+        11 => "November",
+        12 => "December",
+        _ => "Unknown",
+    };
 
-        let month_name = match time_tracker.month {
-            1 => "January",
-            2 => "February",
-            3 => "March",
-            4 => "April",
-            5 => "May",
-            6 => "June",
-            7 => "July",
-            8 => "August",
-            9 => "September",
-            10 => "October",
-            11 => "November",
-            12 => "December",
-            _ => "Unknown",
-        };
+    let pause_status = if time_tracker.pause {
+        "Paused"
+    } else {
+        "Running"
+    };
 
-        let pause_status = if time_tracker.pause {
-            "Paused"
-        } else {
-            "Running"
-        };
-
-        text.0 = format!(
-            "Date: {} {} {} | Speed: {} | {}",
-            month_name, time_tracker.day, time_tracker.year, time_tracker.speed, pause_status
-        );
-
-        let mut market_info = String::new();
-        for (good_type, quantity, price) in &market.goods {
-            // Converte o GoodType para string
-            let type_str = match good_type {
-                GoodType::Wine => "Wine",
-                GoodType::Grain => "Grain",
-                GoodType::Fruit => "Fruit",
-            };
-            // Monta a linha para o produto
-            market_info.push_str(&format!(
-                "{}: qty = {:.4}, price = {:.4}\n",
-                type_str, quantity, price
-            ));
-        }
-    }
+    text.0 = format!(
+        "Date: {} {} {} | Speed: {} | {}",
+        month_name, time_tracker.day, time_tracker.year, time_tracker.speed, pause_status
+    );
 }
 
 // Add this new system
@@ -471,6 +452,12 @@ fn update_market_ui(
     text.0 = market_info;
 }
 
+fn keyboard_input(keys: Res<ButtonInput<KeyCode>>, mut time_tracker: ResMut<TimeTracker>) {
+    if keys.just_pressed(KeyCode::Space) {
+        time_tracker.pause = !time_tracker.pause
+    }
+}
+
 fn main() {
     let goods: Vec<(GoodType, f32, f32)> = vec![
         (GoodType::Grain, 50.0, get_base_price(GoodType::Grain)),
@@ -496,6 +483,7 @@ fn main() {
                 advance_time,
                 update_ui,
                 update_market_ui,
+                keyboard_input,
             )
                 .chain(),
         )
