@@ -5,7 +5,7 @@ pub struct TimeTracker {
     pub day: u32,
     pub month: u32,
     pub year: u32,
-    pub speed: u8, // todo: implement speed (1-5) in advance time system
+    pub speed: u8,
     pub pause: bool,
     pub elapsed_time: f32, // Accumulates delta time
 }
@@ -44,28 +44,39 @@ pub fn advance_time(
     if time_tracker.elapsed_time >= 1.0 {
         // One game day passes every second
         time_tracker.elapsed_time = 0.0;
-        time_tracker.day += 1;
 
-        new_day_ev.send(NewDayEvent {
-            day: time_tracker.day,
-            month: time_tracker.month,
-            year: time_tracker.year,
-        });
+        let mut count = 0;
 
-        if time_tracker.day > 30 {
-            // Example: 30 days per month
-            time_tracker.day = 1;
-            time_tracker.month += 1;
+        loop {
+            count += 1;
+
+            time_tracker.day += 1;
+
+            if time_tracker.day > 30 {
+                // Example: 30 days per month
+                time_tracker.day = 1;
+                time_tracker.month += 1;
+            }
+
+            if time_tracker.month > 12 {
+                time_tracker.month = 1;
+                time_tracker.year += 1;
+            }
+
+            new_day_ev.send(NewDayEvent {
+                day: time_tracker.day,
+                month: time_tracker.month,
+                year: time_tracker.year,
+            });
+
+            println!(
+                "Game Date: {}-{}-{}",
+                time_tracker.day, time_tracker.month, time_tracker.year
+            );
+
+            if count == time_tracker.speed {
+                break;
+            }
         }
-
-        if time_tracker.month > 12 {
-            time_tracker.month = 1;
-            time_tracker.year += 1;
-        }
-
-        println!(
-            "Game Date: {}-{}-{}",
-            time_tracker.day, time_tracker.month, time_tracker.year
-        );
     }
 }
