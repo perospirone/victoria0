@@ -3,6 +3,8 @@ use bevy::prelude::*;
 use crate::time::NewDayEvent;
 use crate::{GoodType, Market};
 
+const CONSUME_FACTOR: f32 = 10000.0;
+
 pub enum Culture {
     Brazilian,
 }
@@ -34,7 +36,7 @@ pub struct PopGroup {
     pub happiness: f32,       // 0.0 - 1.0
     pub political_power: f32, // 0.0 - 1.0
     pub money: f32,
-    pub needs: Vec<(GoodType, f32)>, // goods needed(good_type, quantity per 1000 pops)
+    pub needs: Vec<(GoodType, f32)>, // goods needed(good_type, quantity per CONSUME_FACTOR pops)
     pub province_id: u32,
 }
 
@@ -82,7 +84,7 @@ pub fn population_consumption_system(
 
         for pop in query.iter() {
             for (good_type, quantity) in &pop.needs {
-                let demand = quantity * pop.size as f32 / 1000.0;
+                let demand = quantity * pop.size as f32 / CONSUME_FACTOR;
                 println!(
                     "good_type: {:?}, quantity: {:?}, demand: {:?}",
                     good_type, quantity, demand
@@ -100,7 +102,7 @@ pub fn population_consumption_system(
                             pop.id, demand, good_type, available_quantity
                         );
                         // maybe only consume what was available:
-                        *available_quantity = 0.0;
+                        //*available_quantity = 0.0;
                     }
                 } else {
                     println!(
