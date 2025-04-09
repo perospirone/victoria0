@@ -1,3 +1,7 @@
+// in this moment Good component and good entities are not being used but i think that this will
+// work for now, then i think that for now i will keep this but with the thought of change this
+// later, and change this approach for other
+
 use bevy::prelude::*;
 
 #[derive(Component)]

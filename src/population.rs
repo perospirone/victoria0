@@ -11,6 +11,7 @@ pub enum Religion {
     Catholic,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PopClass {
     Farmers,
     Laborers,
@@ -23,7 +24,9 @@ pub enum PopClass {
 #[derive(Component)]
 pub struct PopGroup {
     pub id: u32,
-    pub size: u32,
+    pub size: u32,               // manpower size
+    pub manpower_available: u32, // manpower available to hire
+    pub employers_id: Vec<u32>,  // todo: change this name
     pub class: PopClass,
     pub culture: Culture,
     pub religion: Religion,
@@ -32,19 +35,37 @@ pub struct PopGroup {
     pub political_power: f32, // 0.0 - 1.0
     pub money: f32,
     pub needs: Vec<(GoodType, f32)>, // goods needed(good_type, quantity per 1000 pops)
-    pub province_id: i32,
+    pub province_id: u32,
 }
 
 pub fn add_pops(mut commands: Commands) {
     commands.spawn(PopGroup {
         id: 1,
         size: 1000,
-        class: PopClass::Laborers,
+        manpower_available: 1000,
+        employers_id: vec![],
+        class: PopClass::Farmers,
         money: 0.0,
         needs: vec![(GoodType::Wine, 0.1), (GoodType::Grain, 0.2)],
         culture: Culture::Brazilian,
         religion: Religion::Catholic,
         literacy: 0.2,
+        happiness: 1.0,
+        political_power: 0.1,
+        province_id: 1,
+    });
+
+    commands.spawn(PopGroup {
+        id: 2,
+        size: 1000,
+        manpower_available: 1000,
+        employers_id: vec![],
+        class: PopClass::Craftsmen,
+        money: 0.0,
+        needs: vec![(GoodType::Wine, 0.1), (GoodType::Grain, 0.2)],
+        culture: Culture::Brazilian,
+        religion: Religion::Catholic,
+        literacy: 0.5,
         happiness: 1.0,
         political_power: 0.1,
         province_id: 1,

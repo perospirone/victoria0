@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::goods::{add_goods, get_base_price, get_good_name, GoodType};
 use crate::market::{update_prices_system, Market};
 use crate::population::{add_pops, population_consumption_system};
-use crate::production::{add_factories, production_system};
+use crate::production::{add_factories, add_farms, hiring_system, production_system};
 use crate::province::add_provincies;
 use crate::time::{advance_time, NewDayEvent, TimeTracker};
 use crate::ui::{setup_ui, update_market_ui, update_ui};
@@ -50,11 +50,20 @@ fn main() {
         .insert_resource(Market { goods })
         .add_systems(
             Startup,
-            (setup_ui, add_goods, add_provincies, add_factories, add_pops).chain(),
+            (
+                setup_ui,
+                add_goods,
+                add_provincies,
+                add_farms,
+                add_factories,
+                add_pops,
+            )
+                .chain(),
         )
         .add_systems(
             Update,
             (
+                hiring_system,
                 production_system,
                 population_consumption_system,
                 update_prices_system,
