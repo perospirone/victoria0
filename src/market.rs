@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::time::NewDayEvent;
 use crate::{get_base_price, GoodType};
 
+// in this moment i have a unique market to entire world, but in future i will improve this with different markets and different prices(each province will have a specific price different than others in the same market)
 #[derive(Resource)]
 pub struct Market {
     pub goods: Vec<(GoodType, f32, f32)>, // (type, quantity available, actual price)
