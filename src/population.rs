@@ -11,6 +11,8 @@ pub enum Culture {
 
 pub enum Religion {
     Catholic,
+    Protestant,
+    Animist,
 }
 
 pub enum NeedType {

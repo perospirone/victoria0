@@ -30,10 +30,6 @@ impl Production {
     }
 }
 
-fn debit_production_money(production_id: u32, amount: f32) {
-    todo!();
-}
-
 #[derive(Component)]
 pub struct Factory {
     pub efficiency: f32, // 0.0 - 1.0
@@ -388,6 +384,8 @@ pub fn salary_system(
         new_day_ev.clear(); // clean processed events
 
         for mut production in production_query.iter_mut() {
+            let mut total_salary = 0.0;
+
             for employee in production.employees.iter() {
                 println!("{:?}", employee);
 
@@ -398,13 +396,12 @@ pub fn salary_system(
                             println!("found");
                             pop.receive_money(employee.3);
 
-                            let id = production.id;
-                            debit_production_money(id, employee.3);
-                            //production.remove_money(employee.3);
+                            total_salary += employee.3;
                         }
                     }
                 }
             }
+            production.remove_money(total_salary);
         }
     }
 }
